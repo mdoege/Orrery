@@ -6,9 +6,9 @@ import pygame
 import time, math
 import orrp
 
-RES  = 150		# internal resolution
-SRES = 600		# window size
-ANIM_SPEED = 4	# animation speed factor
+RES  = 150      # internal resolution
+SRES = 600      # window size
+ANIM_SPEED = 4  # animation speed factor
 
 class Orr:
 	def __init__(s):
@@ -21,6 +21,7 @@ class Orr:
 		s.plusDays = 0
 		s.anim = False
 		s.anim_start = 0
+		s.old_offset = -1e6
 
 	def events(s):
 		for event in pygame.event.get():
@@ -30,29 +31,23 @@ class Orr:
 				s.screen = pygame.display.set_mode(s.res, pygame.RESIZABLE)
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
 				s.plusDays += 1
-				pygame.display.set_caption("%+i days" % s.plusDays)
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
 				s.plusDays -= 1
-				pygame.display.set_caption("%+i days" % s.plusDays)
 
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
 				s.plusDays += 30
-				pygame.display.set_caption("%+i days" % s.plusDays)
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
 				s.plusDays -= 30
-				pygame.display.set_caption("%+i days" % s.plusDays)
 
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
 				s.plusDays = 0
-				pygame.display.set_caption("Today")
 
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
 				s.anim = not s.anim
 				if s.anim:
 					s.anim_start = time.time()
-					pygame.display.set_caption("Animation on")
 				else:
-					pygame.display.set_caption("Animation off")
+					s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
 
 	def run(s):
 		s.running = True
@@ -72,7 +67,16 @@ class Orr:
 			ani = ANIM_SPEED * (time.time() - s.anim_start)
 		else:
 			ani = 0
-		ti = time.localtime(seconds_absolute + 86400 * (s.plusDays + ani))
+		offset = s.plusDays + ani
+		ti = time.localtime(seconds_absolute + 86400 * offset)
+		if offset != s.old_offset:
+			s.old_offset = offset
+			o1 = "%04u-%02u-%02u" % (ti[0], ti[1], ti[2])
+			if round(offset) == 0: o2 = ""
+			else: o2 = "(%+i days)" % round(offset)
+			if s.anim: o3 = "(animation on)"
+			else: o3 = ""
+			pygame.display.set_caption("%s  %s  %s" % (o1, o2, o3))
 		planets_dict = orrp.coordinates(ti[0], ti[1], ti[2], ti[3], ti[4])
 		pygame.draw.circle(s.dazz, (255, 255, 0), (PL_CENTER[0], PL_CENTER[1]), 4)
 		for i, el in enumerate(planets_dict):
