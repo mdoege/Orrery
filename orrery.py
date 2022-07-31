@@ -39,6 +39,11 @@ class Orr:
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
 				s.plusDays -= 30
 
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_PAGEUP:
+				s.plusDays += 365
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_PAGEDOWN:
+				s.plusDays -= 365
+
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
 				s.plusDays = 0
 
