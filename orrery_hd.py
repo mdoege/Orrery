@@ -3,7 +3,7 @@
 # High-res Python orrery
 
 import pygame
-import time, math
+import time, math, os.path
 import orrp
 
 RES  = 950      # internal resolution
@@ -24,7 +24,7 @@ pic = (
 
 pic2 = []
 for n, p in enumerate(pic):
-	img = pygame.image.load("img/" + p)
+	img = pygame.image.load(os.path.join("img", p))
 	pic2.append(img)
 
 class Orr:
