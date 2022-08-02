@@ -22,6 +22,9 @@ pic = (
 "neptune.png",
 )
 
+# planet mean solar distances in AU
+pdist = (.387, .723, 1, 1.524, 5.205, 9.576, 19.281, 30.142)
+
 pic2 = []
 for n, p in enumerate(pic):
 	img = pygame.image.load(os.path.join("img", p))
@@ -36,9 +39,11 @@ class Orr:
 		s.clock = pygame.time.Clock()
 		s.dazz = pygame.Surface((RES, RES))
 		s.plusDays = 0
-		s.anim = False
+		s.anim = False        # animate view?
 		s.anim_start = 0
 		s.old_offset = -1e6
+		s.dist = False        # use true distance?
+		s.zoom = 7            # default zoom level (= Neptune orbit)
 
 	def events(s):
 		for event in pygame.event.get():
@@ -70,6 +75,14 @@ class Orr:
 					s.anim_start = time.time()
 				else:
 					s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+				s.dist = not s.dist
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_PLUS:
+				s.zoom -= 1
+				s.zoom = max(0, min(s.zoom, 7))
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_MINUS:
+				s.zoom += 1
+				s.zoom = max(0, min(s.zoom, 7))
 
 	def run(s):
 		s.running = True
@@ -100,11 +113,26 @@ class Orr:
 			else: o3 = ""
 			pygame.display.set_caption("%s  %s  %s" % (o1, o2, o3))
 		planets_dict = orrp.coordinates(ti[0], ti[1], ti[2], ti[3], ti[4])
+
+		# draw Sun
 		xi, yi = pic2[0].get_size()
-		s.dazz.blit(pic2[0], (PL_CENTER[0] - xi//2, PL_CENTER[1] - yi//2))
+		if not s.dist or (s.dist and s.zoom < 4):
+			s.dazz.blit(pic2[0], (PL_CENTER[0] - xi//2, PL_CENTER[1] - yi//2))
+
+		# draw orbits
 		for i, el in enumerate(planets_dict):
-			r = 55 * (i + 1) + 2
+			if s.dist:
+				r = 440 / pdist[s.zoom] * pdist[i]
+			else:
+				r = 55 * (i + 1)
 			pygame.draw.circle(s.dazz, (80, 80, 80), (PL_CENTER[0], PL_CENTER[1]), r, width = 4)
+
+		# draw planets
+		for i, el in enumerate(planets_dict):
+			if s.dist:
+				r = 440 / pdist[s.zoom] * pdist[i]
+			else:
+				r = 55 * (i + 1)
 			feta = math.atan2(el[0], el[1])
 			coordinates = (r * math.sin(feta), r * math.cos(feta))
 			coordinates = (coordinates[0] + PL_CENTER[0], HEIGHT - (coordinates[1] + PL_CENTER[1]))
