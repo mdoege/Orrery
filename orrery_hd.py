@@ -9,6 +9,7 @@ import orrp
 RES  = 950      # internal resolution
 SRES = 950      # window size
 ANIM_SPEED = 4  # animation speed factor
+FAST_FAC = 50   # speed factor for fast animation
 
 pic = (
 "sun.png",
@@ -40,6 +41,7 @@ class Orr:
 		s.dazz = pygame.Surface((RES, RES))
 		s.plusDays = 0
 		s.anim = False        # animate view?
+		s.fast = False        # faster animation?
 		s.anim_start = 0
 		s.old_offset = -1e6
 		s.dist = False        # use true distance?
@@ -74,7 +76,18 @@ class Orr:
 				if s.anim:
 					s.anim_start = time.time()
 				else:
+					if s.fast:
+						s.plusDays += FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
+					elif s.anim:
+						s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_f and s.anim:
+				if s.fast:
+					s.plusDays += FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
+				elif s.anim:
 					s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
+				s.fast = not s.fast
+				s.anim_start = time.time()
+
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
 				s.dist = not s.dist
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_PLUS:
@@ -98,7 +111,9 @@ class Orr:
 		PL_CENTER = (int(WIDTH / 2), int(WIDTH / 2))
 		seconds_absolute = time.time()
 		plusDays = 0
-		if s.anim:
+		if s.anim and s.fast:
+			ani = FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
+		elif s.anim:
 			ani = ANIM_SPEED * (time.time() - s.anim_start)
 		else:
 			ani = 0
