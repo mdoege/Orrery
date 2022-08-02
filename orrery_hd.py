@@ -8,7 +8,7 @@ import orrp
 
 RES  = 950      # internal resolution
 SRES = 950      # window size
-ANIM_SPEED = 4  # animation speed factor
+ANIM_SPEED = .1 # animation speed
 FAST_FAC = 50   # speed factor for fast animation
 
 pic = (
@@ -42,8 +42,6 @@ class Orr:
 		s.plusDays = 0
 		s.anim = False        # animate view?
 		s.fast = False        # faster animation?
-		s.anim_start = 0
-		s.old_offset = -1e6
 		s.dist = False        # use true distance?
 		s.zoom = 7            # default zoom level (= Neptune orbit)
 
@@ -73,20 +71,8 @@ class Orr:
 
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
 				s.anim = not s.anim
-				if s.anim:
-					s.anim_start = time.time()
-				else:
-					if s.fast:
-						s.plusDays += FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
-					elif s.anim:
-						s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
-			if event.type == pygame.KEYDOWN and event.key == pygame.K_f and s.anim:
-				if s.fast:
-					s.plusDays += FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
-				elif s.anim:
-					s.plusDays += ANIM_SPEED * (time.time() - s.anim_start)
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
 				s.fast = not s.fast
-				s.anim_start = time.time()
 
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_d:
 				s.dist = not s.dist
@@ -110,23 +96,20 @@ class Orr:
 		WIDTH, HEIGHT = RES, RES
 		PL_CENTER = (int(WIDTH / 2), int(WIDTH / 2))
 		seconds_absolute = time.time()
-		plusDays = 0
 		if s.anim and s.fast:
-			ani = FAST_FAC * ANIM_SPEED * (time.time() - s.anim_start)
+			ani = FAST_FAC * ANIM_SPEED
 		elif s.anim:
-			ani = ANIM_SPEED * (time.time() - s.anim_start)
+			ani = ANIM_SPEED
 		else:
 			ani = 0
-		offset = s.plusDays + ani
-		ti = time.localtime(seconds_absolute + 86400 * offset)
-		if offset != s.old_offset:
-			s.old_offset = offset
-			o1 = "%04u-%02u-%02u" % (ti[0], ti[1], ti[2])
-			if round(offset) == 0: o2 = ""
-			else: o2 = "(%+i days)" % round(offset)
-			if s.anim: o3 = "(animation on)"
-			else: o3 = ""
-			pygame.display.set_caption("%s  %s  %s" % (o1, o2, o3))
+		s.plusDays += ani
+		ti = time.localtime(seconds_absolute + 86400 * s.plusDays)
+		o1 = "%04u-%02u-%02u" % (ti[0], ti[1], ti[2])
+		if round(s.plusDays) == 0: o2 = ""
+		else: o2 = "(%+i days)" % round(s.plusDays)
+		if s.anim: o3 = "(animation on)"
+		else: o3 = ""
+		pygame.display.set_caption("%s  %s  %s" % (o1, o2, o3))
 		planets_dict = orrp.coordinates(ti[0], ti[1], ti[2], ti[3], ti[4])
 
 		# draw Sun
